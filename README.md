@@ -2,6 +2,8 @@
 
 A beautiful, mobile-responsive habit tracking web application built with Next.js, TypeScript, and shadcn/ui, featuring an Apple-inspired liquid glass aesthetic.
 
+**Latest Deployment:** June 13, 2025 - Mobile-optimized with three-state tracking
+
 ![Habit Tracker Preview](https://via.placeholder.com/800x400/f0f9ff/1e40af?text=Habit+Tracker+Preview)
 
 ## ✨ Features
