@@ -10,8 +10,8 @@ export default function Navigation() {
   const pathname = usePathname()
   const { user } = useAuth()
 
-  // Don't show navigation on login page or if user is not authenticated
-  if (pathname === '/login' || !user) {
+  // Don't show navigation on login page, habit detail pages, or if user is not authenticated
+  if (pathname === '/login' || pathname.startsWith('/habit/') || !user) {
     return null
   }
 
