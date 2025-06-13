@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 export default function LoginPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in')
+  const [view, setView] = useState<'sign_in' | 'sign_up' | 'forgotten_password'>('sign_in')
 
   useEffect(() => {
     if (user && !loading) {
@@ -45,39 +45,57 @@ export default function LoginPage() {
       <div className="glass-card max-w-md w-full p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {view === 'sign_in' ? 'Welcome Back' : 'Create Account'}
+            {view === 'sign_in' ? 'Welcome Back' : 
+             view === 'sign_up' ? 'Create Account' : 
+             'Reset Password'}
           </h1>
           <p className="text-gray-600 text-sm">
             {view === 'sign_in' 
               ? 'Sign in to your habit tracker' 
-              : 'Start tracking your habits today'
+              : view === 'sign_up'
+              ? 'Start tracking your habits today'
+              : 'Enter your email to reset your password'
             }
           </p>
         </div>
 
-        {/* Toggle Buttons */}
-        <div className="flex mb-6 p-1 glass-panel rounded-lg">
-          <button
-            onClick={() => setView('sign_in')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-              view === 'sign_in'
-                ? 'bg-blue-500/20 text-blue-700 border border-blue-500/30'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => setView('sign_up')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-              view === 'sign_up'
-                ? 'bg-blue-500/20 text-blue-700 border border-blue-500/30'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
+        {/* Toggle Buttons - Only show for sign_in and sign_up */}
+        {view !== 'forgotten_password' && (
+          <div className="flex mb-6 p-1 glass-panel rounded-lg">
+            <button
+              onClick={() => setView('sign_in')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
+                view === 'sign_in'
+                  ? 'bg-blue-500/20 text-blue-700 border border-blue-500/30'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setView('sign_up')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
+                view === 'sign_up'
+                  ? 'bg-blue-500/20 text-blue-700 border border-blue-500/30'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+        )}
+
+        {/* Back button for forgotten password */}
+        {view === 'forgotten_password' && (
+          <div className="mb-6">
+            <button
+              onClick={() => setView('sign_in')}
+              className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              ← Back to Sign In
+            </button>
+          </div>
+        )}
 
         <Auth
           supabaseClient={supabase}
@@ -185,7 +203,7 @@ export default function LoginPage() {
         {view === 'sign_in' && (
           <div className="mt-4 text-center">
             <button
-              onClick={() => setView('forgotten_password' as any)}
+              onClick={() => setView('forgotten_password')}
               className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
             >
               Forgot your password?
