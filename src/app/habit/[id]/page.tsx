@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useHabits } from '@/contexts/HabitContext'
-import { getMonthDays, formatDate, isToday, cn } from '@/lib/utils'
+import { formatDate, isToday, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -124,184 +124,71 @@ export default function HabitDetail() {
   const previousMonth = () => setCurrentDate(subMonths(currentDate, 1))
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1))
 
-  // Calculate stats - FIXED: only include days up to today
+  // Calculate stats - FIXED: improved date handling to prevent first-day-of-month bug
   const today = startOfDay(new Date())
+  
+  // Helper function to properly parse date strings to avoid timezone issues
+  const parseEntryDate = (dateStr: string): Date => {
+    // Ensure consistent parsing by explicitly constructing date
+    const [year, month, day] = dateStr.split('-').map(Number)
+    return new Date(year, month - 1, day) // month is 0-indexed
+  }
+  
   const currentMonthEntries = habit.entries.filter(entry => {
-    const entryDate = new Date(entry.date)
+    const entryDate = parseEntryDate(entry.date)
     return isSameMonth(entryDate, currentDate) && !isAfter(startOfDay(entryDate), today)
   })
   
-  // Get all days in current month up to today (FIXED)
-  const monthDays = getMonthDays(currentDate)
-  const daysUpToToday = monthDays.filter(day => !isAfter(startOfDay(day), today))
-  
   const completedDays = currentMonthEntries.filter(e => e.completed).length
   const failedDays = currentMonthEntries.filter(e => !e.completed).length
-  const totalDaysUpToToday = daysUpToToday.length
-  const completionRate = totalDaysUpToToday > 0 ? Math.round((completedDays / totalDaysUpToToday) * 100) : 0
+  const totalTrackedDays = completedDays + failedDays // Only count days with actual entries
+  
+  // Success rate based only on tracked days (completed vs failed)
+  const completionRate = totalTrackedDays > 0 ? Math.round((completedDays / totalTrackedDays) * 100) : 0
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-8">
-      <div className="mb-6">
-        {/* Header with Back Button and Habit Name */}
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => router.push('/')}
-            className="glass-button p-2 hover:scale-105 transition-transform"
-            title="Back to Home"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="flex-1 text-center">
-            <h1 className="text-2xl font-bold text-gray-900">{habit.name}</h1>
-            <p className="text-gray-600 text-sm">Track your daily progress</p>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2 max-w-sm mx-auto">
-          <Button
-            onClick={openEditDialog}
-            disabled={isUpdating}
-            className="glass-button bg-blue-500/20 border-blue-500/30 text-blue-700 hover:bg-blue-500/30 px-4 py-2 text-sm flex-1"
-          >
-            <Edit3 size={16} className="mr-2" />
-            Edit
-          </Button>
-
-          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                disabled={isDeleting}
-                className="glass-button text-red-600 border-red-500/30 hover:bg-red-500/20 px-4 py-2 text-sm flex-1"
-              >
-                <Trash2 size={16} className="mr-2" />
-                Delete
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="glass-panel border-white/30 mx-4">
-              <DialogHeader>
-                <DialogTitle className="text-lg font-bold">Delete Habit</DialogTitle>
-                <DialogDescription className="text-gray-600 text-sm">
-                  Are you sure you want to delete &quot;{habit.name}&quot;? This action cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="gap-2 flex-col sm:flex-row">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDeleteDialog(false)}
-                  disabled={isDeleting}
-                  className="glass-button px-4 py-2 text-sm w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleDeleteHabit}
-                  disabled={isDeleting}
-                  className="bg-red-500/20 border-red-500/30 text-red-700 hover:bg-red-500/30 px-4 py-2 text-sm w-full sm:w-auto"
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Edit Dialog */}
-          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-            <DialogContent className="glass-panel border-white/30 mx-4">
-              <DialogHeader>
-                <DialogTitle className="text-lg font-bold">Edit Habit</DialogTitle>
-                <DialogDescription className="text-gray-600 text-sm">
-                  Change the name of your habit.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="editName" className="text-sm font-semibold text-gray-900">
-                    Habit Name
-                  </Label>
-                  <Input
-                    id="editName"
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="glass-input"
-                    placeholder="Enter habit name"
-                    disabled={isUpdating}
-                  />
-                </div>
-              </div>
-              <DialogFooter className="gap-2 flex-col sm:flex-row">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowEditDialog(false)}
-                  disabled={isUpdating}
-                  className="glass-button px-4 py-2 text-sm w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleEditHabit}
-                  disabled={!editName.trim() || isUpdating}
-                  className="bg-blue-500/20 border-blue-500/30 text-blue-700 hover:bg-blue-500/30 disabled:opacity-50 px-4 py-2 text-sm w-full sm:w-auto"
-                >
-                  {isUpdating ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="glass-card text-center p-4">
-          <div className="text-2xl font-bold text-green-600 mb-1">{completedDays}</div>
-          <div className="text-xs text-gray-600 font-medium">Completed</div>
-        </div>
-        <div className="glass-card text-center p-4">
-          <div className="text-2xl font-bold text-red-600 mb-1">{failedDays}</div>
-          <div className="text-xs text-gray-600 font-medium">Failed</div>
-        </div>
-        <div className="glass-card text-center p-4">
-          <div className="text-2xl font-bold text-blue-600 mb-1">{completionRate}%</div>
-          <div className="text-xs text-gray-600 font-medium">Success Rate</div>
-        </div>
-        <div className="glass-card text-center p-4">
-          <div className="text-2xl font-bold text-gray-900 mb-1">{totalDaysUpToToday}</div>
-          <div className="text-xs text-gray-600 font-medium">Days Tracked</div>
-        </div>
+    <div className="container mx-auto px-4 py-6 pb-32 max-w-md">
+      {/* Header with Back Button and Habit Name */}
+      <div className="flex items-center justify-between mb-8">
+        <button
+          onClick={() => router.push('/')}
+          className="glass-button p-3 hover:scale-105 transition-transform"
+          title="Back to Home"
+        >
+          <ArrowLeft size={22} />
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900 capitalize">{habit.name}</h1>
+        <div className="w-[48px]"></div> {/* Spacer for balance */}
       </div>
 
       {/* Calendar */}
-      <div className="glass-card">
+      <div className="glass-card p-6 mb-8">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-gray-900">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-xl font-bold text-gray-900">
             {format(currentDate, 'MMMM yyyy')}
           </h2>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={previousMonth}
-              className="glass-button p-2 hover:scale-105 transition-transform"
+              className="glass-button p-3 hover:scale-105 transition-transform"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={20} />
             </button>
             <button
               onClick={nextMonth}
-              className="glass-button p-2 hover:scale-105 transition-transform"
+              className="glass-button p-3 hover:scale-105 transition-transform"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={20} />
             </button>
           </div>
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-2 mb-8">
           {/* Day Headers */}
           {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
-            <div key={index} className="text-center text-xs font-semibold text-gray-500 py-2">
+            <div key={index} className="text-center text-sm font-semibold text-gray-500 py-3">
               {day}
             </div>
           ))}
@@ -319,28 +206,26 @@ export default function HabitDetail() {
                 onClick={() => isCurrentMonth && !isFutureDate && handleToggleEntry(date)}
                 disabled={!isCurrentMonth || isFutureDate}
                 className={cn(
-                  "aspect-square rounded-lg border-2 flex items-center justify-center text-sm font-semibold transition-all duration-200 relative min-h-[2.5rem]",
+                  "aspect-square rounded-xl border-2 flex items-center justify-center text-base font-semibold transition-all duration-200 relative min-h-[48px] hover:shadow-lg",
                   !isCurrentMonth && "text-gray-300 cursor-not-allowed border-gray-200 bg-gray-50/30",
                   isFutureDate && isCurrentMonth && "text-gray-400 cursor-not-allowed border-gray-300 bg-gray-100/30",
-                  isCurrentMonth && !isFutureDate && state === 'incomplete' && "habit-incomplete hover:scale-105 bg-gray-100/50 border-gray-400",
-                  isCurrentMonth && state === 'completed' && "habit-completed hover:scale-105 bg-green-100/80 border-green-500",
-                  isCurrentMonth && state === 'failed' && "habit-failed hover:scale-105 bg-red-100/80 border-red-500",
-                  isTodayDate && isCurrentMonth && "ring-2 ring-blue-500/50"
+                  isCurrentMonth && !isFutureDate && state === 'incomplete' && "habit-incomplete hover:scale-105 bg-gray-100/60 border-gray-400 text-gray-700",
+                  isCurrentMonth && state === 'completed' && "habit-completed hover:scale-105 bg-green-100/90 border-green-500 text-green-800",
+                  isCurrentMonth && state === 'failed' && "habit-failed hover:scale-105 bg-red-100/90 border-red-500 text-red-800",
+                  isTodayDate && isCurrentMonth && "ring-3 ring-blue-500/60 shadow-lg"
                 )}
               >
                 <span className={cn(
-                  isTodayDate && isCurrentMonth && "font-bold",
-                  state === 'completed' && isCurrentMonth && "text-green-800",
-                  state === 'failed' && isCurrentMonth && "text-red-800",
-                  state === 'incomplete' && isCurrentMonth && "text-gray-700"
+                  "text-base",
+                  isTodayDate && isCurrentMonth && "font-bold text-lg"
                 )}>
                   {format(date, 'd')}
                 </span>
                 {state === 'completed' && isCurrentMonth && (
-                  <Check size={10} className="absolute top-0.5 right-0.5 text-green-800" />
+                  <Check size={12} className="absolute top-1 right-1 text-green-700" />
                 )}
                 {state === 'failed' && isCurrentMonth && (
-                  <X size={10} className="absolute top-0.5 right-0.5 text-red-800" />
+                  <X size={12} className="absolute top-1 right-1 text-red-700" />
                 )}
               </button>
             )
@@ -348,20 +233,135 @@ export default function HabitDetail() {
         </div>
 
         {/* Legend */}
-        <div className="flex justify-center gap-4 mt-6 pt-4 border-t border-white/20">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded habit-completed bg-green-100/80 border-green-500"></div>
-            <span className="text-xs text-gray-600">Done</span>
+        <div className="flex justify-center gap-6 pt-6 border-t border-white/20">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-lg habit-completed bg-green-100/90 border-green-500"></div>
+            <span className="text-sm font-medium text-gray-600">Completed</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded habit-failed bg-red-100/80 border-red-500"></div>
-            <span className="text-xs text-gray-600">Failed</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-lg habit-failed bg-red-100/90 border-red-500"></div>
+            <span className="text-sm font-medium text-gray-600">Failed</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded habit-incomplete bg-gray-100/50 border-gray-400"></div>
-            <span className="text-xs text-gray-600">Not tracked</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-lg habit-incomplete bg-gray-100/60 border-gray-400"></div>
+            <span className="text-sm font-medium text-gray-600">Not tracked</span>
           </div>
         </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="glass-card text-center p-6 hover:shadow-lg transition-shadow">
+          <div className="text-3xl font-bold text-green-600 mb-2">{completedDays}</div>
+          <div className="text-sm font-semibold text-gray-700">Completed</div>
+        </div>
+        <div className="glass-card text-center p-6 hover:shadow-lg transition-shadow">
+          <div className="text-3xl font-bold text-red-600 mb-2">{failedDays}</div>
+          <div className="text-sm font-semibold text-gray-700">Failed</div>
+        </div>
+        <div className="glass-card text-center p-6 hover:shadow-lg transition-shadow">
+          <div className="text-3xl font-bold text-blue-600 mb-2">{completionRate}%</div>
+          <div className="text-sm font-semibold text-gray-700">Success Rate</div>
+        </div>
+        <div className="glass-card text-center p-6 hover:shadow-lg transition-shadow">
+          <div className="text-3xl font-bold text-gray-900 mb-2">{totalTrackedDays}</div>
+          <div className="text-sm font-semibold text-gray-700">Days Tracked</div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4">
+        <Button
+          onClick={openEditDialog}
+          disabled={isUpdating}
+          className="glass-button bg-blue-500/20 border-blue-500/30 text-blue-700 hover:bg-blue-500/30 hover:shadow-lg px-6 py-4 text-base font-semibold flex-1 transition-all"
+        >
+          <Edit3 size={18} className="mr-3" />
+          Edit Habit
+        </Button>
+
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              disabled={isDeleting}
+              className="glass-button text-red-600 border-red-500/30 hover:bg-red-500/20 hover:shadow-lg px-6 py-4 text-base font-semibold flex-1 transition-all"
+            >
+              <Trash2 size={18} className="mr-3" />
+              Delete
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="glass-panel border-white/30 mx-4">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Delete Habit</DialogTitle>
+              <DialogDescription className="text-gray-600 text-base">
+                Are you sure you want to delete &quot;{habit.name}&quot;? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-3 flex-col sm:flex-row">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={isDeleting}
+                className="glass-button px-6 py-3 text-base font-semibold w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteHabit}
+                disabled={isDeleting}
+                className="bg-red-500/20 border-red-500/30 text-red-700 hover:bg-red-500/30 px-6 py-3 text-base font-semibold w-full sm:w-auto"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Habit'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="glass-panel border-white/30 mx-4">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Edit Habit</DialogTitle>
+              <DialogDescription className="text-gray-600 text-base">
+                Change the name of your habit.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <Label htmlFor="editName" className="text-base font-semibold text-gray-900">
+                  Habit Name
+                </Label>
+                <Input
+                  id="editName"
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="glass-input text-base py-3"
+                  placeholder="Enter habit name"
+                  disabled={isUpdating}
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-3 flex-col sm:flex-row">
+              <Button
+                variant="outline"
+                onClick={() => setShowEditDialog(false)}
+                disabled={isUpdating}
+                className="glass-button px-6 py-3 text-base font-semibold w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditHabit}
+                disabled={!editName.trim() || isUpdating}
+                className="bg-blue-500/20 border-blue-500/30 text-blue-700 hover:bg-blue-500/30 disabled:opacity-50 px-6 py-3 text-base font-semibold w-full sm:w-auto"
+              >
+                {isUpdating ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

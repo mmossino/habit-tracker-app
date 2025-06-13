@@ -11,8 +11,8 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (!loading) {
-      // If user is not authenticated and not on login page, redirect to login
-      if (!user && pathname !== '/login') {
+      // If user is not authenticated and not on login or reset-password page, redirect to login
+      if (!user && pathname !== '/login' && pathname !== '/reset-password') {
         router.push('/login')
       }
       // If user is authenticated and on login page, redirect to home
@@ -39,8 +39,8 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     )
   }
 
-  // If not authenticated and not on login page, don't render children
-  if (!user && pathname !== '/login') {
+  // If not authenticated and not on login or reset-password page, don't render children
+  if (!user && pathname !== '/login' && pathname !== '/reset-password') {
     return null
   }
 

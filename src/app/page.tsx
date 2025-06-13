@@ -67,13 +67,8 @@ export default function Dashboard() {
   // Show loading state
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6 pb-28">
+      <div className="container mx-auto px-3 pt-8 pb-28">
         <div className="text-center max-w-sm mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">Habits</h1>
-            <p className="text-gray-600">Loading your habits...</p>
-          </div>
-          
           <div className="glass-card text-center">
             <div className="animate-pulse">
               <div className="w-16 h-16 bg-gray-200/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -90,13 +85,8 @@ export default function Dashboard() {
 
   if (habits.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-6 pb-28">
+      <div className="container mx-auto px-3 pt-8 pb-28">
         <div className="text-center max-w-sm mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">Habits</h1>
-            <p className="text-gray-600">Start building better habits today</p>
-          </div>
-          
           <div className="glass-card text-center">
             <div className="mb-6">
               <div className="w-16 h-16 bg-gray-200/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -123,12 +113,9 @@ export default function Dashboard() {
   const isCurrentWeek = isSameWeek(new Date(), currentWeekDate, { weekStartsOn: 1 })
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-28">
-      {/* Header with Week Info and Navigation */}
+    <div className="container mx-auto px-3 pt-8 pb-28">
+      {/* Week Navigation */}
       <div className="mb-6 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-1">Habits</h1>
-        <p className="text-gray-600 text-sm mb-3">Track your daily progress</p>
-        
         {/* Week Navigation */}
         <div className="flex items-center justify-center gap-4 mb-2">
           <button

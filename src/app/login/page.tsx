@@ -1,16 +1,21 @@
 'use client'
 
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [view, setView] = useState<'sign_in' | 'sign_up' | 'forgotten_password'>('sign_in')
+  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   useEffect(() => {
     if (user && !loading) {
@@ -18,205 +23,399 @@ export default function LoginPage() {
     }
   }, [user, loading, router])
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      if (mode === 'signin') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
+      } else if (mode === 'signup') {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        })
+        if (error) throw error
+        setSuccess('Check your email for confirmation link')
+      } else if (mode === 'reset') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`
+        })
+        if (error) throw error
+        setSuccess('Reset instructions sent to your email')
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Something went wrong')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="glass-card max-w-md w-full mx-4 p-8">
-          <div className="animate-pulse text-center">
-            <div className="h-8 bg-gray-200 rounded mb-4"></div>
-            <div className="h-4 bg-gray-100 rounded mb-6"></div>
-            <div className="space-y-3">
-              <div className="h-12 bg-gray-200 rounded"></div>
-              <div className="h-12 bg-gray-200 rounded"></div>
-              <div className="h-12 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
+      <div style={{ 
+        height: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <div style={{
+          width: '20px',
+          height: '20px',
+          border: '2px solid #e5e5e5',
+          borderTop: '2px solid #000',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
       </div>
     )
   }
 
-  if (user) {
-    return null // Will redirect to home
-  }
+  if (user) return null
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="glass-card max-w-md w-full p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {view === 'sign_in' ? 'Welcome Back' : 
-             view === 'sign_up' ? 'Create Account' : 
-             'Reset Password'}
+    <div style={{
+      height: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#fafafa',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '400px',
+        padding: '0 20px'
+      }}>
+        
+        {/* App Branding */}
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            backgroundColor: '#000',
+            borderRadius: '16px',
+            margin: '0 auto 24px auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              backgroundColor: '#fff',
+              borderRadius: '50%'
+            }} />
+          </div>
+          <h1 style={{
+            fontSize: '32px',
+            fontWeight: '700',
+            color: '#000',
+            margin: '0 0 8px 0',
+            letterSpacing: '-0.5px'
+          }}>
+            Streakly
           </h1>
-          <p className="text-gray-600 text-sm">
-            {view === 'sign_in' 
-              ? 'Sign in to your habit tracker' 
-              : view === 'sign_up'
-              ? 'Start tracking your habits today'
-              : 'Enter your email to reset your password'
+          <p style={{
+            fontSize: '18px',
+            color: '#666',
+            margin: '0 0 32px 0',
+            lineHeight: '1.4'
+          }}>
+            {mode === 'signin' 
+              ? 'Build better habits, one day at a time' 
+              : mode === 'signup'
+              ? 'Start your journey to better habits'
+              : 'Reset your password to continue'
             }
           </p>
         </div>
 
-        {/* Toggle Buttons - Only show for sign_in and sign_up */}
-        {view !== 'forgotten_password' && (
-          <div className="flex mb-6 p-1 glass-panel rounded-lg">
-            <button
-              onClick={() => setView('sign_in')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                view === 'sign_in'
-                  ? 'bg-blue-500/20 text-blue-700 border border-blue-500/30'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => setView('sign_up')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                view === 'sign_up'
-                  ? 'bg-blue-500/20 text-blue-700 border border-blue-500/30'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
-        )}
-
-        {/* Back button for forgotten password */}
-        {view === 'forgotten_password' && (
-          <div className="mb-6">
-            <button
-              onClick={() => setView('sign_in')}
-              className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              ← Back to Sign In
-            </button>
-          </div>
-        )}
-
-        <Auth
-          supabaseClient={supabase}
-          view={view}
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: 'rgb(59 130 246)',
-                  brandAccent: 'rgb(37 99 235)',
-                  brandButtonText: 'white',
-                  defaultButtonBackground: 'rgba(255, 255, 255, 0.4)',
-                  defaultButtonBackgroundHover: 'rgba(255, 255, 255, 0.5)',
-                  defaultButtonBorder: 'rgba(255, 255, 255, 0.5)',
-                  defaultButtonText: 'rgb(55 65 81)',
-                  dividerBackground: 'rgba(255, 255, 255, 0.3)',
-                  inputBackground: 'rgba(255, 255, 255, 0.4)',
-                  inputBorder: 'rgba(255, 255, 255, 0.5)',
-                  inputBorderHover: 'rgba(59, 130, 246, 0.6)',
-                  inputBorderFocus: 'rgba(59, 130, 246, 0.6)',
-                  inputText: 'rgb(55 65 81)',
-                  inputLabelText: 'rgb(55 65 81)',
-                  inputPlaceholder: 'rgb(107 114 128)',
-                },
-                space: {
-                  spaceSmall: '4px',
-                  spaceMedium: '8px',
-                  spaceLarge: '16px',
-                  labelBottomMargin: '8px',
-                  anchorBottomMargin: '4px',
-                  emailInputSpacing: '4px',
-                  socialAuthSpacing: '4px',
-                  buttonPadding: '10px 15px',
-                  inputPadding: '10px 15px',
-                },
-                fontSizes: {
-                  baseBodySize: '14px',
-                  baseInputSize: '14px',
-                  baseLabelSize: '14px',
-                  baseButtonSize: '14px',
-                },
-                fonts: {
-                  bodyFontFamily: `'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif`,
-                  buttonFontFamily: `'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif`,
-                  inputFontFamily: `'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif`,
-                  labelFontFamily: `'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif`,
-                },
-                borderWidths: {
-                  buttonBorderWidth: '1px',
-                  inputBorderWidth: '1px',
-                },
-                radii: {
-                  borderRadiusButton: '8px',
-                  buttonBorderRadius: '8px',
-                  inputBorderRadius: '8px',
-                },
-              },
-            },
-            style: {
-              button: {
-                backdropFilter: 'blur(16px)',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              },
-              input: {
-                backdropFilter: 'blur(16px)',
-                transition: 'all 0.2s ease',
-              },
-              container: {
-                backdropFilter: 'blur(20px)',
-              },
-            },
-          }}
-          providers={[]} // Remove all social providers
-          redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/` : '/'}
-          onlyThirdPartyProviders={false}
-          magicLink={false} // Disable magic link
-          showLinks={false} // Hide default links since we have our own toggle
-          localization={{
-            variables: {
-              sign_in: {
-                email_label: 'Email address',
-                password_label: 'Password',
-                button_label: 'Sign In',
-                loading_button_label: 'Signing in...',
-              },
-              sign_up: {
-                email_label: 'Email address',
-                password_label: 'Create a password',
-                button_label: 'Create Account',
-                loading_button_label: 'Creating account...',
-                confirmation_text: 'Check your email for the confirmation link',
-              },
-              forgotten_password: {
-                email_label: 'Email address',
-                button_label: 'Send reset instructions',
-                loading_button_label: 'Sending reset instructions...',
-                confirmation_text: 'Check your email for the password reset link',
-              },
-            },
-          }}
-        />
-
-        {/* Forgot Password Link */}
-        {view === 'sign_in' && (
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setView('forgotten_password')}
-              className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              Forgot your password?
-            </button>
-          </div>
-        )}
-
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
-            By continuing, you agree to our terms of service and privacy policy.
+        {/* Form Header */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: '600',
+            color: '#000',
+            margin: '0 0 8px 0'
+          }}>
+            {mode === 'signin' ? 'Welcome back' : 
+             mode === 'signup' ? 'Create your account' : 
+             'Reset password'}
+          </h2>
+          <p style={{
+            fontSize: '16px',
+            color: '#666',
+            margin: '0'
+          }}>
+                         {mode === 'signin' 
+               ? 'Sign in to continue building streaks' 
+               : mode === 'signup'
+               ? 'Join thousands building habit streaks'
+               : 'Enter your email to reset your password'
+             }
           </p>
         </div>
+
+        {/* Messages */}
+        {error && (
+          <div style={{
+            padding: '16px',
+            backgroundColor: '#fee',
+            border: '1px solid #fcc',
+            borderRadius: '12px',
+            color: '#c33',
+            fontSize: '14px',
+            marginBottom: '24px',
+            textAlign: 'center'
+          }}>
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div style={{
+            padding: '16px',
+            backgroundColor: '#efe',
+            border: '1px solid #cfc',
+            borderRadius: '12px',
+            color: '#363',
+            fontSize: '14px',
+            marginBottom: '24px',
+            textAlign: 'center'
+          }}>
+            {success}
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          
+          {/* Email */}
+          <div style={{ marginBottom: '16px' }}>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email address"
+              required
+              disabled={isLoading}
+              style={{
+                width: '100%',
+                padding: '18px 16px',
+                border: '1px solid #ddd',
+                borderRadius: '12px',
+                fontSize: '16px',
+                backgroundColor: '#fff',
+                outline: 'none',
+                transition: 'border-color 0.2s',
+                boxSizing: 'border-box'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#000'}
+              onBlur={(e) => e.target.style.borderColor = '#ddd'}
+            />
+          </div>
+
+          {/* Password */}
+          {mode !== 'reset' && (
+            <div style={{ marginBottom: '24px', position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                required
+                disabled={isLoading}
+                minLength={mode === 'signup' ? 6 : undefined}
+                style={{
+                  width: '100%',
+                  padding: '18px 16px',
+                  paddingRight: '50px',
+                  border: '1px solid #ddd',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  backgroundColor: '#fff',
+                  outline: 'none',
+                  transition: 'border-color 0.2s',
+                  boxSizing: 'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#000'}
+                onBlur={(e) => e.target.style.borderColor = '#ddd'}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+                style={{
+                  position: 'absolute',
+                  right: '16px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#666',
+                  padding: '4px'
+                }}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading || !email || (mode !== 'reset' && !password)}
+            style={{
+              width: '100%',
+              padding: '18px',
+              backgroundColor: '#000',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              opacity: (isLoading || !email || (mode !== 'reset' && !password)) ? 0.6 : 1,
+              transition: 'opacity 0.2s, transform 0.1s',
+              transform: 'translateY(0px)'
+            }}
+            onMouseDown={(e) => (e.target as HTMLElement).style.transform = 'translateY(1px)'}
+            onMouseUp={(e) => (e.target as HTMLElement).style.transform = 'translateY(0px)'}
+            onMouseLeave={(e) => (e.target as HTMLElement).style.transform = 'translateY(0px)'}
+          >
+            {isLoading ? 'Loading...' : (
+              mode === 'signin' ? 'Sign In' : 
+              mode === 'signup' ? 'Create Account' : 
+              'Send Reset Email'
+            )}
+          </button>
+        </form>
+
+        {/* Footer Links */}
+        <div style={{ textAlign: 'center', marginTop: '32px' }}>
+          {mode === 'signin' && (
+            <div>
+              <button
+                onClick={() => setMode('reset')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#666',
+                  fontSize: '15px',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  marginBottom: '16px'
+                }}
+              >
+                Forgot password?
+              </button>
+              <div style={{ fontSize: '15px', color: '#666' }}>
+                Don't have an account?{' '}
+                <button
+                  onClick={() => setMode('signup')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#000',
+                    fontSize: '15px',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    fontWeight: '600'
+                  }}
+                >
+                  Sign up
+                </button>
+              </div>
+            </div>
+          )}
+
+          {mode === 'signup' && (
+            <div style={{ fontSize: '15px', color: '#666' }}>
+              Already have an account?{' '}
+              <button
+                onClick={() => setMode('signin')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#000',
+                  fontSize: '15px',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  fontWeight: '600'
+                }}
+              >
+                Sign in
+              </button>
+            </div>
+          )}
+
+          {mode === 'reset' && (
+            <button
+              onClick={() => setMode('signin')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#000',
+                fontSize: '15px',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontWeight: '600'
+              }}
+            >
+              Back to Sign In
+            </button>
+          )}
+        </div>
+
+        {/* Marketing Footer */}
+        {mode === 'signup' && (
+          <div style={{
+            textAlign: 'center',
+            marginTop: '48px',
+            padding: '24px',
+            backgroundColor: '#f8f8f8',
+            borderRadius: '16px',
+            border: '1px solid #eee'
+          }}>
+            <p style={{
+              fontSize: '14px',
+              color: '#666',
+              margin: '0 0 8px 0'
+            }}>
+              Join over 10,000+ users building better habits
+            </p>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '24px',
+              fontSize: '13px',
+              color: '#888'
+            }}>
+              <span>✓ Track daily progress</span>
+              <span>✓ Build streaks</span>
+              <span>✓ Stay motivated</span>
+            </div>
+          </div>
+        )}
       </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 } 

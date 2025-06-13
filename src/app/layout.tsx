@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Habit Tracker",
-  description: "A beautiful habit tracking app with liquid glass design",
+  title: "Streakly",
+  description: "Build better habits, one streak at a time",
 };
 
 export default function RootLayout({
