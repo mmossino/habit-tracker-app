@@ -152,7 +152,7 @@ export default function LoginPage() {
             },
           }}
           providers={[]} // Remove all social providers
-          redirectTo={`${window.location.origin}/`}
+          redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/` : '/'}
           onlyThirdPartyProviders={false}
           magicLink={false} // Disable magic link
           showLinks={false} // Hide default links since we have our own toggle

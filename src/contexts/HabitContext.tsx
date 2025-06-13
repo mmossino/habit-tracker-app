@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { Habit, HabitEntry, HabitWithEntries } from '@/types/habit'
 import { formatDate } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
@@ -28,19 +28,7 @@ export function HabitProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
 
-  // Load data from Supabase when user changes
-  useEffect(() => {
-    if (user) {
-      loadData()
-    } else {
-      // Clear data when user logs out
-      setHabits([])
-      setEntries([])
-      setLoading(false)
-    }
-  }, [user])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return
 
     try {
@@ -88,7 +76,19 @@ export function HabitProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  // Load data from Supabase when user changes
+  useEffect(() => {
+    if (user) {
+      loadData()
+    } else {
+      // Clear data when user logs out
+      setHabits([])
+      setEntries([])
+      setLoading(false)
+    }
+  }, [user, loadData])
 
   const addHabit = async (habitData: Omit<Habit, 'id' | 'createdAt'>) => {
     if (!user) throw new Error('User not authenticated')
@@ -189,12 +189,10 @@ export function HabitProvider({ children }: { children: React.ReactNode }) {
         // Update existing entry
         const newCompleted = !existingEntry.completed
         
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('habit_entries')
           .update({ completed: newCompleted })
           .eq('id', existingEntry.id)
-          .select()
-          .single()
 
         if (error) throw error
 
