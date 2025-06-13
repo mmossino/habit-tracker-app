@@ -1,0 +1,30 @@
+{
+  "name": "Streakly - Build Better Habits",
+  "short_name": "Streakly",
+  "description": "Build better habits, one streak at a time. Track your daily habits and achieve your goals.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "lifestyle", "health"],
+  "shortcuts": [
+    {
+      "name": "Create Habit",
+      "short_name": "Create",
+      "description": "Create a new habit",
+      "url": "/create",
+      "icons": [{ "src": "/icon.svg", "sizes": "any" }]
+    }
+  ]
+} 
