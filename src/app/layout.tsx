@@ -23,14 +23,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://streakly.vercel.app'),
+  metadataBase: new URL('https://habitflow-11388uoop-mikes-projects-05744d9a.vercel.app'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: "Streakly - Build Better Habits",
     description: "Build better habits, one streak at a time. Track your daily habits, build consistency, and achieve your goals.",
-    url: 'https://streakly.vercel.app',
+    url: 'https://habitflow-11388uoop-mikes-projects-05744d9a.vercel.app',
     siteName: 'Streakly',
     images: [
       {
