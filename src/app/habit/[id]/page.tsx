@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Trash2, Check, X, ChevronLeft, ChevronRight, Edit3, ArrowLeft } from 'lucide-react'
+import { Trash2, Check, X, ChevronLeft, ChevronRight, Edit3 } from 'lucide-react'
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isAfter, startOfDay } from 'date-fns'
 import { useState } from 'react'
 
@@ -141,26 +141,132 @@ export default function HabitDetail() {
   const completionRate = totalDaysUpToToday > 0 ? Math.round((completedDays / totalDaysUpToToday) * 100) : 0
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-8">
-      {/* Header with Back Button and Habit Name */}
+    <div className="container mx-auto px-3 py-4 pb-28">
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => router.push('/')}
-            className="glass-button p-2 hover:scale-105 transition-transform"
-            title="Back to Home"
+        {/* Habit Header */}
+        <div className="text-center mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{habit.name}</h1>
+          <p className="text-gray-600 text-sm">Track your daily progress</p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 max-w-sm mx-auto">
+          <Button
+            onClick={openEditDialog}
+            disabled={isUpdating}
+            className="glass-button bg-blue-500/20 border-blue-500/30 text-blue-700 hover:bg-blue-500/30 px-4 py-2 text-sm flex-1"
           >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">{habit.name}</h1>
-            <p className="text-gray-600 text-sm">Track your daily progress</p>
-          </div>
+            <Edit3 size={16} className="mr-2" />
+            Edit
+          </Button>
+
+          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                disabled={isDeleting}
+                className="glass-button text-red-600 border-red-500/30 hover:bg-red-500/20 px-4 py-2 text-sm flex-1"
+              >
+                <Trash2 size={16} className="mr-2" />
+                Delete
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="glass-panel border-white/30 mx-4">
+              <DialogHeader>
+                <DialogTitle className="text-lg font-bold">Delete Habit</DialogTitle>
+                <DialogDescription className="text-gray-600 text-sm">
+                  Are you sure you want to delete &quot;{habit.name}&quot;? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2 flex-col sm:flex-row">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteDialog(false)}
+                  disabled={isDeleting}
+                  className="glass-button px-4 py-2 text-sm w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteHabit}
+                  disabled={isDeleting}
+                  className="bg-red-500/20 border-red-500/30 text-red-700 hover:bg-red-500/30 px-4 py-2 text-sm w-full sm:w-auto"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Dialog */}
+          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+            <DialogContent className="glass-panel border-white/30 mx-4">
+              <DialogHeader>
+                <DialogTitle className="text-lg font-bold">Edit Habit</DialogTitle>
+                <DialogDescription className="text-gray-600 text-sm">
+                  Change the name of your habit.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="editName" className="text-sm font-semibold text-gray-900">
+                    Habit Name
+                  </Label>
+                  <Input
+                    id="editName"
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="glass-input"
+                    placeholder="Enter habit name"
+                    disabled={isUpdating}
+                  />
+                </div>
+              </div>
+              <DialogFooter className="gap-2 flex-col sm:flex-row">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowEditDialog(false)}
+                  disabled={isUpdating}
+                  className="glass-button px-4 py-2 text-sm w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleEditHabit}
+                  disabled={!editName.trim() || isUpdating}
+                  className="bg-blue-500/20 border-blue-500/30 text-blue-700 hover:bg-blue-500/30 disabled:opacity-50 px-4 py-2 text-sm w-full sm:w-auto"
+                >
+                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
-      {/* Calendar - Now at the top */}
-      <div className="glass-card mb-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="glass-card text-center p-4">
+          <div className="text-2xl font-bold text-green-600 mb-1">{completedDays}</div>
+          <div className="text-xs text-gray-600 font-medium">Completed</div>
+        </div>
+        <div className="glass-card text-center p-4">
+          <div className="text-2xl font-bold text-red-600 mb-1">{failedDays}</div>
+          <div className="text-xs text-gray-600 font-medium">Failed</div>
+        </div>
+        <div className="glass-card text-center p-4">
+          <div className="text-2xl font-bold text-blue-600 mb-1">{completionRate}%</div>
+          <div className="text-xs text-gray-600 font-medium">Success Rate</div>
+        </div>
+        <div className="glass-card text-center p-4">
+          <div className="text-2xl font-bold text-gray-900 mb-1">{totalDaysUpToToday}</div>
+          <div className="text-xs text-gray-600 font-medium">Days Tracked</div>
+        </div>
+      </div>
+
+      {/* Calendar */}
+      <div className="glass-card">
         {/* Calendar Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-gray-900">
@@ -247,121 +353,6 @@ export default function HabitDetail() {
             <span className="text-xs text-gray-600">Not tracked</span>
           </div>
         </div>
-      </div>
-
-      {/* Stats KPIs - Now below calendar */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="glass-card text-center p-4">
-          <div className="text-2xl font-bold text-green-600 mb-1">{completedDays}</div>
-          <div className="text-xs text-gray-600 font-medium">Completed</div>
-        </div>
-        <div className="glass-card text-center p-4">
-          <div className="text-2xl font-bold text-red-600 mb-1">{failedDays}</div>
-          <div className="text-xs text-gray-600 font-medium">Failed</div>
-        </div>
-        <div className="glass-card text-center p-4">
-          <div className="text-2xl font-bold text-blue-600 mb-1">{completionRate}%</div>
-          <div className="text-xs text-gray-600 font-medium">Success Rate</div>
-        </div>
-        <div className="glass-card text-center p-4">
-          <div className="text-2xl font-bold text-gray-900 mb-1">{totalDaysUpToToday}</div>
-          <div className="text-xs text-gray-600 font-medium">Days Tracked</div>
-        </div>
-      </div>
-
-      {/* Action Buttons - Now at the bottom */}
-      <div className="flex gap-3">
-        <Button
-          onClick={openEditDialog}
-          disabled={isUpdating}
-          className="glass-button bg-blue-500/20 border-blue-500/30 text-blue-700 hover:bg-blue-500/30 px-6 py-3 text-sm flex-1"
-        >
-          <Edit3 size={16} className="mr-2" />
-          Edit Habit
-        </Button>
-
-        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <DialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              disabled={isDeleting}
-              className="glass-button text-red-600 border-red-500/30 hover:bg-red-500/20 px-6 py-3 text-sm flex-1"
-            >
-              <Trash2 size={16} className="mr-2" />
-              Delete
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="glass-panel border-white/30 mx-4">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-bold">Delete Habit</DialogTitle>
-              <DialogDescription className="text-gray-600 text-sm">
-                Are you sure you want to delete &quot;{habit.name}&quot;? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="gap-2 flex-col sm:flex-row">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteDialog(false)}
-                disabled={isDeleting}
-                className="glass-button px-4 py-2 text-sm w-full sm:w-auto"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleDeleteHabit}
-                disabled={isDeleting}
-                className="bg-red-500/20 border-red-500/30 text-red-700 hover:bg-red-500/30 px-4 py-2 text-sm w-full sm:w-auto"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Dialog */}
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="glass-panel border-white/30 mx-4">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-bold">Edit Habit</DialogTitle>
-              <DialogDescription className="text-gray-600 text-sm">
-                Change the name of your habit.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="editName" className="text-sm font-semibold text-gray-900">
-                  Habit Name
-                </Label>
-                <Input
-                  id="editName"
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="glass-input"
-                  placeholder="Enter habit name"
-                  disabled={isUpdating}
-                />
-              </div>
-            </div>
-            <DialogFooter className="gap-2 flex-col sm:flex-row">
-              <Button
-                variant="outline"
-                onClick={() => setShowEditDialog(false)}
-                disabled={isUpdating}
-                className="glass-button px-4 py-2 text-sm w-full sm:w-auto"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleEditHabit}
-                disabled={!editName.trim() || isUpdating}
-                className="bg-blue-500/20 border-blue-500/30 text-blue-700 hover:bg-blue-500/30 disabled:opacity-50 px-4 py-2 text-sm w-full sm:w-auto"
-              >
-                {isUpdating ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </DialogFooter>
-          </Dialog>
-        </Dialog>
       </div>
     </div>
   )
