@@ -27,7 +27,7 @@ export default function HabitDetail() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6 pb-24">
+      <div className="container mx-auto px-4 py-6 pb-28">
         <div className="text-center max-w-sm mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded mb-4"></div>
@@ -48,7 +48,7 @@ export default function HabitDetail() {
 
   if (!habit) {
     return (
-      <div className="container mx-auto px-4 py-6 pb-24">
+      <div className="container mx-auto px-4 py-6 pb-28">
         <div className="text-center max-w-sm mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Habit not found</h1>
         </div>
@@ -141,7 +141,7 @@ export default function HabitDetail() {
   const completionRate = totalDaysUpToToday > 0 ? Math.round((completedDays / totalDaysUpToToday) * 100) : 0
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-24">
+    <div className="container mx-auto px-3 py-4 pb-28">
       <div className="mb-6">
         {/* Habit Header */}
         <div className="text-center mb-4">

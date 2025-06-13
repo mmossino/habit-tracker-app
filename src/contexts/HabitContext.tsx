@@ -186,23 +186,34 @@ export function HabitProvider({ children }: { children: React.ReactNode }) {
 
     try {
       if (existingEntry) {
-        // Update existing entry
-        const newCompleted = !existingEntry.completed
-        
-        const { error } = await supabase
-          .from('habit_entries')
-          .update({ completed: newCompleted })
-          .eq('id', existingEntry.id)
+        // Three-state logic: completed → failed → incomplete (delete)
+        if (existingEntry.completed) {
+          // Change from completed to failed
+          const { error } = await supabase
+            .from('habit_entries')
+            .update({ completed: false })
+            .eq('id', existingEntry.id)
 
-        if (error) throw error
+          if (error) throw error
 
-        setEntries(prev => prev.map(entry =>
-          entry.id === existingEntry.id
-            ? { ...entry, completed: newCompleted }
-            : entry
-        ))
+          setEntries(prev => prev.map(entry =>
+            entry.id === existingEntry.id
+              ? { ...entry, completed: false }
+              : entry
+          ))
+        } else {
+          // Change from failed to incomplete (delete entry)
+          const { error } = await supabase
+            .from('habit_entries')
+            .delete()
+            .eq('id', existingEntry.id)
+
+          if (error) throw error
+
+          setEntries(prev => prev.filter(entry => entry.id !== existingEntry.id))
+        }
       } else {
-        // Create new entry
+        // Create new entry as completed (incomplete → completed)
         const { data, error } = await supabase
           .from('habit_entries')
           .insert({

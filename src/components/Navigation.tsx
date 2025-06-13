@@ -22,8 +22,8 @@ export default function Navigation() {
   ]
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 z-50">
-      <div className="glass-panel rounded-2xl p-3">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 pb-safe">
+      <div className="mx-4 mb-4 glass-panel rounded-2xl p-3">
         <div className="flex justify-around items-center">
           {navItems.map((item) => {
             const Icon = item.icon
@@ -34,7 +34,7 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[3.5rem] min-h-[3rem]",
+                  "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 flex-1 min-h-[3rem]",
                   isActive 
                     ? "nav-active" 
                     : "glass-button hover:bg-white/30"

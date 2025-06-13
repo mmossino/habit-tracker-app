@@ -4,7 +4,7 @@ import { useHabits } from '@/contexts/HabitContext'
 import { getWeekDays, formatDate, isToday, cn } from '@/lib/utils'
 import { Check, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-import { format, getWeek, addWeeks, subWeeks, isSameWeek } from 'date-fns'
+import { format, getWeek, addWeeks, subWeeks, isSameWeek, isAfter, startOfDay } from 'date-fns'
 import { useState, useEffect } from 'react'
 
 export default function Dashboard() {
@@ -45,6 +45,11 @@ export default function Dashboard() {
   }
 
   const handleToggleEntry = async (habitId: string, date: Date) => {
+    // Only allow toggling for today or past dates
+    if (isAfter(startOfDay(date), startOfDay(new Date()))) {
+      return
+    }
+    
     try {
       await toggleHabitEntry(habitId, date)
     } catch (error) {
@@ -62,7 +67,7 @@ export default function Dashboard() {
   // Show loading state
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 pb-28">
         <div className="text-center max-w-sm mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-3">Habits</h1>
@@ -85,7 +90,7 @@ export default function Dashboard() {
 
   if (habits.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 pb-28">
         <div className="text-center max-w-sm mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-3">Habits</h1>
@@ -118,7 +123,7 @@ export default function Dashboard() {
   const isCurrentWeek = isSameWeek(new Date(), currentWeekDate, { weekStartsOn: 1 })
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-24">
+    <div className="container mx-auto px-3 py-4 pb-28">
       {/* Header with Week Info and Navigation */}
       <div className="mb-6 text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-1">Habits</h1>
@@ -211,16 +216,21 @@ export default function Dashboard() {
                 {/* Daily Checkboxes */}
                 {weekDays.map((date) => {
                   const state = getHabitState(habit.id, date)
+                  const isFutureDate = isAfter(startOfDay(date), startOfDay(new Date()))
                   
                   return (
                     <div key={date.toISOString()} className="flex justify-center">
                       <button
                         onClick={() => handleToggleEntry(habit.id, date)}
+                        disabled={isFutureDate}
                         className={cn(
-                          "w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95",
+                          "w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all duration-200",
+                          !isFutureDate && "hover:scale-110 active:scale-95",
+                          isFutureDate && "cursor-not-allowed opacity-50",
                           state === 'completed' && "habit-completed shadow-lg",
                           state === 'failed' && "habit-failed shadow-lg",
-                          state === 'incomplete' && "habit-incomplete hover:border-gray-400"
+                          state === 'incomplete' && !isFutureDate && "habit-incomplete hover:border-gray-400",
+                          state === 'incomplete' && isFutureDate && "habit-incomplete"
                         )}
                       >
                         {state === 'completed' && (
