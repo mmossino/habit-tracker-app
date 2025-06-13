@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Trash2, Check, X, ChevronLeft, ChevronRight, Edit3 } from 'lucide-react'
+import { Trash2, Check, X, ChevronLeft, ChevronRight, Edit3, ArrowLeft } from 'lucide-react'
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isAfter, startOfDay } from 'date-fns'
 import { useState } from 'react'
 
@@ -141,12 +141,21 @@ export default function HabitDetail() {
   const completionRate = totalDaysUpToToday > 0 ? Math.round((completedDays / totalDaysUpToToday) * 100) : 0
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-28">
+    <div className="container mx-auto px-3 py-4 pb-8">
       <div className="mb-6">
-        {/* Habit Header */}
-        <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">{habit.name}</h1>
-          <p className="text-gray-600 text-sm">Track your daily progress</p>
+        {/* Header with Back Button and Habit Name */}
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => router.push('/')}
+            className="glass-button p-2 hover:scale-105 transition-transform"
+            title="Back to Home"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div className="flex-1 text-center">
+            <h1 className="text-2xl font-bold text-gray-900">{habit.name}</h1>
+            <p className="text-gray-600 text-sm">Track your daily progress</p>
+          </div>
         </div>
 
         {/* Action Buttons */}
