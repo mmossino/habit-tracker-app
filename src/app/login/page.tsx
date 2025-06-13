@@ -321,7 +321,7 @@ export default function LoginPage() {
                 Forgot password?
               </button>
               <div style={{ fontSize: '15px', color: '#666' }}>
-                Don't have an account?{' '}
+                                 Don&apos;t have an account?{' '}
                 <button
                   onClick={() => setMode('signup')}
                   style={{
