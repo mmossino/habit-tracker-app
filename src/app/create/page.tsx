@@ -40,7 +40,7 @@ export default function CreateHabit() {
   }
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-28">
+    <div className="container mx-auto px-3 py-4 pb-32">
       <div className="mb-6 text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Habit</h1>
         <p className="text-gray-600 text-sm">Add a new habit to track daily</p>

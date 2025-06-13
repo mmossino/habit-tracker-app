@@ -67,7 +67,7 @@ export default function Dashboard() {
   // Show loading state
   if (loading) {
     return (
-      <div className="container mx-auto px-3 pt-8 pb-28">
+      <div className="container mx-auto px-3 pt-8 pb-32">
         <div className="text-center max-w-sm mx-auto">
           <div className="glass-card text-center">
             <div className="animate-pulse">
@@ -85,7 +85,7 @@ export default function Dashboard() {
 
   if (habits.length === 0) {
     return (
-      <div className="container mx-auto px-3 pt-8 pb-28">
+      <div className="container mx-auto px-3 pt-8 pb-32">
         <div className="text-center max-w-sm mx-auto">
           <div className="glass-card text-center">
             <div className="mb-6">
@@ -113,7 +113,7 @@ export default function Dashboard() {
   const isCurrentWeek = isSameWeek(new Date(), currentWeekDate, { weekStartsOn: 1 })
 
   return (
-    <div className="container mx-auto px-3 pt-8 pb-28">
+    <div className="container mx-auto px-3 pt-8 pb-32">
       {/* Week Navigation */}
       <div className="mb-6 text-center">
         {/* Week Navigation */}
